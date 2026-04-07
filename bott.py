@@ -6,13 +6,19 @@ from telegram.ext import (
 )
 
 import asyncio
+import os
 from datetime import datetime
 
-TOKEN = "8375527745:AAE50nIvvlJg0nta_nZZMf5CmzSSxGy7ILQ"
+# 🔐 TOKEN — Renderdan olinadi (GitHubga yozilmaydi)
+TOKEN = os.getenv("TOKEN")
 
-ADMIN_ID =298243768
+# 👑 ADMIN ID
+ADMIN_ID = 8036404646
+
+# 📢 GROUPLAR (keyin qo‘shasan)
 GROUPS = []
 
+# 💾 TEMP DATA
 user_state = {}
 stats = {"sent": 0, "failed": 0}
 
@@ -22,7 +28,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
 
-    # 👑 ADMIN
     if user_id == ADMIN_ID:
         keyboard = [
             [InlineKeyboardButton("🎯 Aksiya", callback_data="aksiya")],
@@ -34,14 +39,13 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "👑 Admin panel",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
-
-    # 👤 USER
     else:
         await update.message.reply_text(
-            "🌍 Xush kelibsiz!\n\nBiz bilan sayohat qiling ✈️\n\n"
-            "📍 Eng yaxshi yo‘nalishlar\n"
-            "🏨 Qulay paketlar\n"
-            "💬 Batafsil ma’lumot uchun admin bilan bog‘laning"
+            "🌍 Xush kelibsiz!\n"
+            "✈️ Sayohat bot\n\n"
+            "📍 Yo‘nalishlar\n"
+            "🏨 Paketlar\n"
+            "📞 Admin bilan bog‘lanish"
         )
 
 
@@ -53,13 +57,8 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = query.from_user.id
 
-    # ❌ ADMIN EMAS
     if user_id != ADMIN_ID:
         await query.message.reply_text("❌ Sizda ruxsat yo‘q")
-        return
-
-    # ❌ GROUPDA ISHLAMASIN
-    if update.effective_chat.type != "private":
         return
 
     if query.data in ["aksiya", "daily"]:
@@ -68,7 +67,9 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     elif query.data == "stats":
         await query.message.reply_text(
-            f"📊 Statistika\n\nYuborilgan: {stats['sent']}\nXatolar: {stats['failed']}"
+            f"📊 Statistika\n\n"
+            f"Yuborilgan: {stats['sent']}\n"
+            f"Xatolar: {stats['failed']}"
         )
 
     elif query.data == "setup_send":
@@ -79,7 +80,7 @@ async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
         ]
 
         await query.message.reply_text(
-            "⏰ Qanday yuborilsin?",
+            "⏰ Yuborish vaqti:",
             reply_markup=InlineKeyboardMarkup(keyboard)
         )
 
@@ -93,11 +94,9 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.message.from_user.id
 
-    # ❌ ADMIN EMAS → ignore
     if user_id != ADMIN_ID:
         return
 
-    # ❌ GROUPDA ISHLAMASIN
     if update.effective_chat.type != "private":
         return
 
@@ -114,7 +113,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("🌍 Yo‘nalish:")
         return
 
-    # STEPS
     if step == "yonalish":
         data["yonalish"] = update.message.text
         data["step"] = "paket"
@@ -204,7 +202,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
         data["final_text"] = text
 
         keyboard = [
-            [InlineKeyboardButton("📤 Yuborishni sozlash", callback_data="setup_send")]
+            [InlineKeyboardButton("📤 Yuborish sozlash", callback_data="setup_send")]
         ]
 
         await update.message.reply_photo(
@@ -215,7 +213,6 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # TIME
     if step == "time":
-
         h, m = map(int, update.message.text.split(":"))
 
         asyncio.create_task(schedule_send(
@@ -225,7 +222,7 @@ async def message_handler(update: Update, context: ContextTypes.DEFAULT_TYPE):
             m
         ))
 
-        await update.message.reply_text("✅ Ishga tushdi!")
+        await update.message.reply_text("✅ Saqlandi!")
 
 
 # ---------------- SCHEDULE ----------------
